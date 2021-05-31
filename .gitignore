@@ -3,3 +3,6 @@ venv
 
 # Ignore PyCharm folder
 .idea
+
+__pycache__
+images
