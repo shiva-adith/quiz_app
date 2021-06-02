@@ -1,6 +1,12 @@
 import requests
 
 
+class QuestionModel:
+    def __init__(self, q_text, q_answer):
+        self.question = q_text
+        self.answer = q_answer
+
+
 class Data:
     def __init__(self):
         self.url = "https://opentdb.com/api.php?"
@@ -11,7 +17,7 @@ class Data:
         self.data = self.response.json()
 
         self.question_data = self.data.get("results")
-        print(self.question_data[:2])
+        # print(self.question_data[:2])
 
-
-data = Data()
+    def share_data(self):
+        return self.question_data
