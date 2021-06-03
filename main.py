@@ -1,9 +1,10 @@
 import ui
 from brain import QuizBrain
-from data import Data, QuestionModel
+from data import QuestionModel, Data
 
 
 def main():
+    # quiz_config = DataConfigs()
     question_data = Data()
     question_bank = []
 

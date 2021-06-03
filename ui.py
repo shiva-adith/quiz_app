@@ -1,9 +1,8 @@
 import tkinter as tk
-from tkinter import font
+from tkinter import font, StringVar
 from PIL import ImageTk, Image
 from main import quiz
-from brain import QuizBrain
-# from data import data
+from data import Data
 
 THEME_COLOR = "#cbf1f5"
 MAIN_FONT = ("Arial", 20, "normal")
@@ -15,11 +14,12 @@ class App(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.master = master
         self.quiz = q_list
+        self.quiz_config = Data()
 
         # Fonts
-        self.question_font = font.Font(family="Lovelo", size=12, slant="italic", weight="normal")
+        self.question_font = font.Font(family="Helvetica", size=12, weight="bold")
         self.title_font = font.Font(family='Helvetica', size=20, weight="bold", slant="italic")
-        self.score_font = font.Font(family="Lovelo", size=15, weight="bold")
+        self.score_font = font.Font(family="Helvetica", size=15, weight="bold")
 
         self.container = tk.Frame(self, bg=THEME_COLOR)
         self.container.pack(side="top", fill="both", expand=True)
@@ -56,24 +56,33 @@ class MainPage(tk.Frame):
         main_frame = tk.Frame(self)
         main_frame.place(relx=0.5, rely=0.5, anchor='center')
 
-        bg_img = ImageTk.PhotoImage(Image.open("images/main_page.png"))
+        self.bg_img = ImageTk.PhotoImage(Image.open("images/main_page.png"))
 
         # Background Image
-        bg_canvas = tk.Canvas(main_frame, width=500, height=750, highlightthickness=0)
-        bg_canvas.background = bg_img
-        bg_canvas.create_image(0, 0, anchor=tk.NW, image=bg_img)
-        bg_canvas.grid(column=0, row=0, columnspan=2, rowspan=3)
-        # bg_canvas.place(relx=0.5, rely=0.5, anchor='center')
-
-        # self.main_label = tk.Label(main_frame, text="Main Page", font=controller.title_font)
-        # self.main_label.grid(column=0, row=0)
+        self.bg_canvas = tk.Canvas(main_frame, width=500, height=750, highlightthickness=0)
+        self.bg_canvas.background = self.bg_img
+        self.bg_canvas.create_image(0, 0, anchor=tk.NW, image=self.bg_img)
+        self.bg_canvas.grid(column=0, row=0, columnspan=2, rowspan=3)
 
         # Checkboxes
-        num_question_1 = tk.Radiobutton(main_frame, background="orange", borderwidth=0, highlightthickness=0)
-        num_question_1.grid(column=0, row=1)
+        # num_question_1 = tk.Radiobutton(main_frame, background="orange", borderwidth=0, highlightthickness=0)
+        # num_question_1.grid(column=0, row=1)
 
-        self.quiz_btn = tk.Button(main_frame, text="Submit", command=lambda: controller.show_frame("QuizPage"))
+        # Dropdown Categories
+        self.category_list = controller.quiz_config.available_categories
+        self.category = StringVar(main_frame)
+        # default value
+        self.category.set(self.category_list[0])
+        category_dropdown = tk.OptionMenu(main_frame, self.category, *self.category_list)
+        category_dropdown.grid(column=1, row=1)
+
+        self.quiz_btn = tk.Button(main_frame, text="Submit", command=lambda: [controller.show_frame("QuizPage"),
+                                                                              self.user_category_selection()])
         self.quiz_btn.grid(column=1, row=2)
+
+    def user_category_selection(self):
+        print(self.category.get())
+        # return self.category.get()
 
 
 class QuizPage(tk.Frame):
@@ -142,7 +151,6 @@ class QuizPage(tk.Frame):
         self.after(1000, func=self.get_next_question())
 
 
-# quiz = QuizBrain(data)
 app = App(q_list=quiz)
 app.title("Quiz App")
 app.config(bg=THEME_COLOR)
