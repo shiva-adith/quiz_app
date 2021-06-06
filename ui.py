@@ -43,31 +43,50 @@ class App(tk.Frame):
 
     def show_frame(self, page_name):
         """
-            Displays desired frame/page
-        :param page_name: (str) Name of the page to display
-        :return: None
+        Displays desired frame/page
+
+        Args:
+            page_name: (str) Name of the page to display
+
+        Returns:
+            None
         """
         frame = self.frames[page_name]
         frame.tkraise()
 
 
 class MainPage(tk.Frame):
-    def __init__(self, parent, controller):
-        """
-        Creates the MainPage
+    """
+    Creates the MainPage
 
-        """
+    Args:
+        parent: References App container
+        controller: References App controller
+
+    Attributes:
+        main_frame: MainPage frame that inherits from tk.Frame class.
+        bg_img: PhotoImage object that loads background image for the MainPage.
+        bg_canvas: Creates Canvas object to display background image, question and score texts.
+        category_list: List of available category names obtained from Data class.
+        category_dropdown: Populates an OptionMenu object with category_list.
+        set_quiz_btn: Calls user_category_selection method.
+        quiz_page_btn: Invokes show_frames method from parent and passes QuizPage as args.
+
+
+    """
+    def __init__(self, parent, controller):
+
         tk.Frame.__init__(self, parent)
         self.controller = controller
         # self.quiz_config = None
 
         # Create main frame
-        main_frame = tk.Frame(self)
-        main_frame.place(relx=0.5, rely=0.5, anchor='center')
+        self.main_frame = tk.Frame(self)
+        self.main_frame.place(relx=0.5, rely=0.5, anchor='center')
 
         # Set Background Image for Main Page
         self.bg_img = ImageTk.PhotoImage(Image.open("images/main_page.png"))
-        self.bg_canvas = tk.Canvas(main_frame, width=500, height=750, highlightthickness=0)
+        self.bg_canvas = tk.Canvas(self.main_frame, width=500, height=750, highlightthickness=0)
         self.bg_canvas.background = self.bg_img
         self.bg_canvas.create_image(0, 0, anchor=tk.NW, image=self.bg_img)
         self.bg_canvas.grid(column=0, row=0, columnspan=2, rowspan=3)
@@ -78,31 +97,36 @@ class MainPage(tk.Frame):
 
         # Dropdown Categories
         self.category_list = self.controller.quiz_config.available_category_names
-        self.category = StringVar(main_frame)
+        self.category = StringVar(self.main_frame)
         # default value -> First on the list
         self.category.set(self.category_list[0])
-        category_dropdown = tk.OptionMenu(main_frame, self.category, *self.category_list)
-        category_dropdown.grid(column=1, row=1)
+        self.category_dropdown = tk.OptionMenu(self.main_frame, self.category, *self.category_list)
+        self.category_dropdown.grid(column=1, row=1)
 
         # Buttons:
         # Set category for Quiz
-        self.set_quiz_btn = tk.Button(main_frame, text="Submit Category",
+        self.set_quiz_btn = tk.Button(self.main_frame, text="Submit Category",
                                       command=lambda: self.user_category_selection())
         self.set_quiz_btn.grid(column=0, row=2)
 
         # Move to QuizPage
-        self.quiz_page_btn = tk.Button(main_frame, text="Go To Quiz",
+        self.quiz_page_btn = tk.Button(self.main_frame, text="Go To Quiz",
                                        command=lambda: self.controller.show_frame("QuizPage"))
 
         self.quiz_page_btn.grid(column=1, row=2)
 
     def user_category_selection(self):
         """
-        Obtains user selection from dropdown box and passes it to populate_quiz method.
-        :return: None
+        Obtains user selection from dropdown box and passes it to set_category method from Data class.
+        Invokes get_data method from Data class and then the populate_quiz method from the QuizPage class.
+
+        Args:
+            Category selected by user in the category_dropdown menu
+
+        Returns:
+            None
         """
-        print(self.category.get())
-        # self.quiz_config = Data(self.category.get())
+        # print(self.category.get())
         self.controller.quiz_config.set_category(self.category.get())
         self.controller.quiz_config.get_data()
         self.controller.frames["QuizPage"].populate_quiz()
@@ -168,11 +192,14 @@ class QuizPage(tk.Frame):
         # self.home_btn.grid(column=1, row=1, pady=20)
 
     def populate_quiz(self):
-        """Populates the Quiz Text space with questions based on user selection for Category.
+        """
+        Populates the Quiz text space with questions based on user selection for Category.
+        Method is invoked by the Submit Category button in the MainPage.
+        Creates QuizBrain object. Its arg is the question bank returned by calling create_quiz method of Data class.
+        Invokes get_next_question method if number of question left is less than the selected value.
 
-            Method is invoked by the Submit Category button.
-            Creates QuizBrain object. Its arg is the question bank returned by calling create_quiz method of Data class.
-        :return:
+        Returns:
+            None
         """
         # print("populate quiz called")
         self.quiz = QuizBrain(self.controller.quiz_config.create_quiz())
@@ -181,6 +208,14 @@ class QuizPage(tk.Frame):
             self.get_next_question()
 
     def get_next_question(self):
+        """
+        If questions are left, it displays the next question on the Canvas. next_question method from QuizBrain is
+        invoked.
+        If there are no more questions, appropriate text is displayed and the buttons are set to 'disabled' state.
+
+        Returns:
+            None
+        """
         if self.quiz.questions_remaining():
             q_text = self.quiz.next_question()
             # print("get next ques reached")
@@ -191,12 +226,38 @@ class QuizPage(tk.Frame):
             self.false_btn.config(state="disabled")
 
     def correct(self):
+        """Answer chosen by User is 'True'
+
+        Passes 'True' to check_answer method from QuizBrain class. Uses bool return value as args to feedback method
+
+        Args (implicit args):
+            bool: True
+
+        """
         self.feedback(self.quiz.check_answer("True"))
 
     def incorrect(self):
+        """Answer chosen by User is 'False'
+
+        Passes 'False' to check_answer method from QuizBrain class. Uses bool return value as args to feedback method
+
+        Args (implicit args):
+           bool: False
+
+        """
         self.feedback(self.quiz.check_answer("False"))
 
     def feedback(self, right_ans):
+        """
+        Updates score_text based on User's choice and bool value returned by check_answer method of QuizBrain class.
+        Waits 1 second and invokes get_next_question method.
+
+        Args:
+            right_ans (bool): True/False based on actual answer to question compared to user's choice
+
+        Returns:
+            None
+        """
         if right_ans:
             print("correct")
             self.bg_canvas.itemconfig(self.score_text, text=f"Score: {self.quiz.score}")
@@ -205,13 +266,3 @@ class QuizPage(tk.Frame):
             print("incorrect")
 
         self.after(1000, func=self.get_next_question())
-#
-#
-# root = tk.Tk()
-# root.title("Quiz App")
-# app = App(root)
-# app.pack(fill="both", expand=True)
-# root.config(bg=THEME_COLOR)
-# root.minsize(width=500, height=750)
-# root.maxsize(width=500, height=750)
-# root.mainloop()
