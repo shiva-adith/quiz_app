@@ -9,6 +9,8 @@ class QuizBrain:
         self.current_question = None
 
     def questions_remaining(self):
+        # print("Reached")
+        # print(len(self.question_list))
         return self.question_number < len(self.question_list)
 
     def next_question(self):
