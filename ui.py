@@ -7,9 +7,10 @@ from data import Data
 THEME_COLOR = "#cbf1f5"
 MAIN_FONT = ("Arial", 20, "normal")
 SCORE_FONT = ("Arial", 10, "bold")
+WINDOW_WIDTH = 500
+WINDOW_HEIGHT = 750
 
 
-# class App(tk.Tk):
 class App(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
@@ -18,7 +19,7 @@ class App(tk.Frame):
 
         # Fonts
         self.question_font = font.Font(family="Helvetica", size=12, weight="bold")
-        self.title_font = font.Font(family='Helvetica', size=20, weight="bold", slant="italic")
+        self.title_font = font.Font(family="Helvetica", size=20, weight="bold", slant="italic")
         self.score_font = font.Font(family="Helvetica", size=15, weight="bold")
 
         self.container = tk.Frame(self, bg=THEME_COLOR)
@@ -69,7 +70,7 @@ class MainPage(tk.Frame):
         bg_canvas: Creates Canvas object to display background image, question and score texts.
         category_list: List of available category names obtained from Data class.
         category_dropdown: Populates an OptionMenu object with category_list.
-        set_quiz_btn: Calls user_category_selection method.
+        set_quiz_btn: Calls user_selection method.
         quiz_page_btn: Invokes show_frames method from parent and passes QuizPage as args.
 
 
@@ -91,31 +92,45 @@ class MainPage(tk.Frame):
         self.bg_canvas.create_image(0, 0, anchor=tk.NW, image=self.bg_img)
         self.bg_canvas.grid(column=0, row=0, columnspan=2, rowspan=3)
 
-        # Checkboxes
-        # num_question_1 = tk.Radiobutton(main_frame, background="orange", borderwidth=0, highlightthickness=0)
-        # num_question_1.grid(column=0, row=1)
-
         # Dropdown Categories
         self.category_list = self.controller.quiz_config.available_category_names
+        # get max size of Category labels to set the width of OptionsMenu bar
+        max_size = int(max([len(category) for category in self.category_list]))
         self.category = StringVar(self.main_frame)
         # default value -> First on the list
         self.category.set(self.category_list[0])
         self.category_dropdown = tk.OptionMenu(self.main_frame, self.category, *self.category_list)
-        self.category_dropdown.grid(column=1, row=1)
+        self.category_dropdown.config(bd=0, width=max_size, font=('helvetica', 10, 'normal'), text='Choose Category')
+        self.category_dropdown.grid(column=0, row=1, sticky='e', padx=20)
+
+        # Spinbox
+        self.num_questions = tk.Spinbox(self.main_frame, from_=5, to=30,
+                                        bd=0, justify="center")
+        self.num_questions.grid(column=1, row=1, sticky='w', padx=20)
 
         # Buttons:
         # Set category for Quiz
-        self.set_quiz_btn = tk.Button(self.main_frame, text="Submit Category",
-                                      command=lambda: self.user_category_selection())
-        self.set_quiz_btn.grid(column=0, row=2)
+        self.set_quiz_btn = tk.Button(self.main_frame,
+                                      text="Submit Category",
+                                      relief='groove',
+                                      padx=5, pady=5,
+                                      command=lambda: self.user_selection())
+        self.set_quiz_btn.grid(column=0, row=2, sticky='w', padx=20)
 
         # Move to QuizPage
-        self.quiz_page_btn = tk.Button(self.main_frame, text="Go To Quiz",
+        self.quiz_page_btn = tk.Button(self.main_frame,
+                                       text="Go To Quiz",
+                                       state='disabled',
+                                       relief='groove',
+                                       padx=5, pady=5,
                                        command=lambda: self.controller.show_frame("QuizPage"))
 
-        self.quiz_page_btn.grid(column=1, row=2)
+        self.quiz_page_btn.grid(column=1, row=2, sticky='e', padx=20)
+        # self.main_frame.grid_rowconfigure(0, minsize=100, weight=1)
+        # self.main_frame.grid_rowconfigure(1, weight=0, pad=10)
+        # self.main_frame.grid_rowconfigure(2, weight=1, pad=10)
 
-    def user_category_selection(self):
+    def user_selection(self):
         """
         Obtains user selection from dropdown box and passes it to set_category method from Data class.
         Invokes get_data method from Data class and then the populate_quiz method from the QuizPage class.
@@ -126,10 +141,12 @@ class MainPage(tk.Frame):
         Returns:
             None
         """
-        # print(self.category.get())
+        self.controller.quiz_config.set_num_questions(self.num_questions.get())
         self.controller.quiz_config.set_category(self.category.get())
         self.controller.quiz_config.get_data()
         self.controller.frames["QuizPage"].populate_quiz()
+        self.set_quiz_btn.config(state="disabled")
+        self.quiz_page_btn.config(state='active')
 
 
 class QuizPage(tk.Frame):
