@@ -20,7 +20,7 @@ class App(tk.Frame):
         # Fonts
         self.question_font = font.Font(family="Helvetica", size=12, weight="bold")
         self.title_font = font.Font(family="Helvetica", size=20, weight="bold", slant="italic")
-        self.score_font = font.Font(family="Helvetica", size=15, weight="bold")
+        self.score_font = font.Font(family="Helvetica", size=13, weight="bold")
 
         self.container = tk.Frame(self, bg=THEME_COLOR)
         self.container.pack(side="top", fill="both", expand=True)
@@ -145,6 +145,8 @@ class MainPage(tk.Frame):
         self.controller.quiz_config.set_category(self.category.get())
         self.controller.quiz_config.get_data()
         self.controller.frames["QuizPage"].populate_quiz()
+
+        # Disable set quiz button and enable change page button. (Only after above processes are successful)
         self.set_quiz_btn.config(state="disabled")
         self.quiz_page_btn.config(state='active')
 
@@ -186,12 +188,14 @@ class QuizPage(tk.Frame):
         self.bg_canvas.grid(column=0, row=0, columnspan=2, rowspan=2)
 
         # Display Score text
-        self.score_text = self.bg_canvas.create_text(200, 250, text=f"Score: 0",
-                                                     fill="red", font=self.s_font)
+        self.score_text = self.bg_canvas.create_text(150, 250, text=f"Score: 0",
+                                                     fill="green", font=self.s_font)
 
         # Display Question text
         self.question = self.bg_canvas.create_text(250, 375, fill="black",
                                                    font=self.q_font, width=300)
+
+        self.indicator_label = self.bg_canvas.create_text(250, 250, fill="green", width=60)
 
         # Buttons
         # True button - calls method: correct()
@@ -276,9 +280,11 @@ class QuizPage(tk.Frame):
             None
         """
         if right_ans:
+            # TODO: The indicator label only flashes once. Doesn't appear for the other correct answers. 
             print("correct")
+            self.bg_canvas.itemconfig(self.indicator_label, text="✔")
             self.bg_canvas.itemconfig(self.score_text, text=f"Score: {self.quiz.score}")
-            # self.bg_canvas.config(bg="green")
+            self.after(2000, self.bg_canvas.delete, self.indicator_label)
         else:
             print("incorrect")
 

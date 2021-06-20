@@ -26,3 +26,9 @@ class QuizBrain:
             return True
         else:
             return False
+
+
+class ScoreCard(QuizBrain):
+    def __init__(self):
+        super.__init__(self)
+        # self.score =
